@@ -1,0 +1,30 @@
+---
+title: "Proposal"
+author: "Vincent Xie"
+toc: true
+number-sections: true
+highlight-style: pygments
+format: 
+  html: 
+    code-fold: true
+    html-math-method: katex
+  pdf: 
+    geometry: 
+      - top=30mm
+      - left=20mm
+---
+
+# Introduction {.unnumbered}
+
+The topic I have chosen for the final presentation involves the NFL Injury Data set provided 
+by [Kaggle]{https://kaggle.com/competitions/nfl-playing-surface-analytics/data?select=PlayList.csv}. 
+
+# Specific Aims {.unnumbered}
+
+# Data Description {.unnumbered}
+
+# Research design/methods/schedule {.unnumbered}
+
+# Discussion {.unnumbered}
+
+# Conclusion {.unnumbered}
