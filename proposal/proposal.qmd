@@ -16,15 +16,68 @@ format:
 
 # Introduction {.unnumbered}
 
-The topic I have chosen for the final presentation involves the NFL Injury Data set provided 
-by [Kaggle]{https://kaggle.com/competitions/nfl-playing-surface-analytics/data?select=PlayList.csv}. 
+The topic I have chosen for the final presentation involves the NFL Injury Data 
+set provided by [Kaggle](https://kaggle.com/competitions/nfl-playing-surface-analytics/data?select=PlayList.csv). Injury prevention in sports, particularly in 
+high-contact sports like American football, is a field of growing importance. 
+Recognizing the critical need for enhanced safety and longevity in athletes' 
+careers, this study is focused on analyzing injury patterns in the National Football 
+League (NFL). As a sports fan myself, I often come across the conversation of injury 
+prevention and we can analyze from the type of injury and the field that they are 
+playing on.
 
 # Specific Aims {.unnumbered}
 
+The primary aim of this research is to identify patterns and factors that contribute 
+to the likelihood of injuries in NFL players. Some questions that could be answered:
+
++ Which injury types are the most common?
++ How does the type of surface affect the chance of injury?
++ Does position matter in regards to injury frequency?
++ Does weather and temperature play an important role?
+
+By understanding the relationships to injury, injury prevention strategies can be 
+adjusted to help professional athletes. There is potential to guide more effective 
+training and game strategies to minimize injury risks and focus on player health.
+
 # Data Description {.unnumbered}
+
+[Source]{https://kaggle.com/competitions/nfl-playing-surface-analytics/data?select=PlayList.csv}.
+
+There are two files that will be used for this project. We have `InjuryRecord.feather`
+and `PlayList.feather`. Both of these files use `PlayerKey`, `GameID`, and `PlayKey` to 
+uniquely identify each record. 
+
+`InjuryRecord.feather` focuses on the types of injury (knee, ankle, etc.), surface type 
+(natural/synthetic), and the duration of the injury. `PlayList.feather` includes 
+the weather (temperature/weather), information on the player (position/group), and 
+what is occuring in the game (play/stadium type, gameplay). It is expected in both 
+data sets that we will have roughly over 267,000 entries. 
 
 # Research design/methods/schedule {.unnumbered}
 
+I will start off my cleaning my data and checking how *clean* it is. Once I have filled
+in missing data, I am able to explore my data and look at the descriptive statistics. 
+From there, I can model the data to answer the questions and analyze the trends. We can 
+also perform hypothesis testing to see if there is a correlation between variables. This 
+will provide insight into injury causation and prevention.
+
 # Discussion {.unnumbered}
 
+It is anticipated that the study will reveal specific correlations between player 
+positions, play types, and injury occurrences. I expect to find that synthetic fields
+have a higher injury frequency compared to natural fields. From NFL player interviews
+to casual fans online, I have a suspicion that synthetic fields may have a high 
+correlation to injuries. The potential impact of this work includes informing training 
+and game strategies, contributing to rule changes, and enhancing player safety protocols.
+For a game where players get paid hundreds of thousands to millions, health longevity
+is crucial. If the result is not what is expected, we can look at the results and create 
+new hypotheses to further our understanding. 
+
 # Conclusion {.unnumbered}
+
+This research proposal outlines a structured approach to understanding injury patterns 
+in the NFL, employing data analysis to investigate a critical hypothesis. The outcome of 
+this study has the potential to significantly influence injury prevention strategies in 
+football, enhancing player safety and career sustainability. By integrating data-driven 
+insights with current sports medicine practices, this research endeavors to contribute 
+meaningfully to the field of sports injury analytics.
