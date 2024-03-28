@@ -41,7 +41,7 @@ training and game strategies to minimize injury risks and focus on player health
 
 # Data Description {.unnumbered}
 
-[Source]{https://kaggle.com/competitions/nfl-playing-surface-analytics/data?select=PlayList.csv}.
+[Source](https://kaggle.com/competitions/nfl-playing-surface-analytics/data?select=PlayList.csv})
 
 There are two files that will be used for this project. We have `InjuryRecord.feather`
 and `PlayList.feather`. Both of these files use `PlayerKey`, `GameID`, and `PlayKey` to 
