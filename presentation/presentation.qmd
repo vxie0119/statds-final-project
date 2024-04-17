@@ -1,0 +1,22 @@
+---
+title: "Effects of Surface Type on the Frequency of Lower Extremity Injuries"
+author: "Vincent Xie"
+execute:
+    echo: false
+format:
+  revealjs:
+    theme: default
+    #incremental: true   
+---
+
+## Overview
+
+## Previous Works
+
+## Data Cleaning
+
+## Models
+
+## Analysis 
+
+## Conclusions
