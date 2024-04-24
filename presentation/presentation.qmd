@@ -1,5 +1,5 @@
 ---
-title: "Effects of Surface Type on the Frequency of Lower Extremity Injuries"
+title: "Effects of Surface Type on Lower Extremity Injuries"
 author: "Vincent Xie"
 execute:
     echo: false
@@ -9,14 +9,299 @@ format:
     #incremental: true   
 ---
 
+```{python}
+# Packages
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import statsmodels.api as sm
+from scipy.stats import chi2_contingency
+import numpy as np
+import warnings
+
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+
+warnings.filterwarnings('ignore', category=FutureWarning)
+```
+
 ## Overview
 
-## Previous Works
+- Data was sourced from [Kaggle](https://www.kaggle.com/competitions/nfl-playing-surface-analytics/data).
+- Recorded from two consecutive NFL Seasons (presumably 2018-2019)
+- Primarily using **InjuryRecord.feather** and **PlayList.feather**
+- `InjuryRecord.feather`
+    + *PlayerKey*, *GameID*, *PlayKey*, *BodyPart*, *Surface*, *Days injured from 1 day to 42 days*
+- `PlayList.feather`
+    + *PlayerKey*, *GameID*, *PlayKey*, *RosterPosition*, *PlayerDay*, *PlayerGame*, *StadiumType*, *FieldType*, *Temperature*, *Weather*, *PlayType*, *PlayerGamePlay*, *Position*, *PositionGroup*
+
+## Existing Works
+
+- Artificial turf had a significant impact for specific knee ligament injuries in the NCAA. [1]
+    + Applies to all divisions (I-III)
+- Synthetic turf has resulted in a "16% increase in lower extremity injuries per play". [2]
+    + There is a higher rate of injury on synthetic fields when restricted to noncontact injuries.
+
+# Question in Mind
+
+Do synthetic fields result in higher injury frequencies?
 
 ## Data Cleaning
 
-## Models
+```{python}
+# Load the datasets
+injury = pd.read_csv('~/STAT 3255/final-project-vxie0119/data/InjuryRecord.csv')
+plays = pd.read_csv('~/STAT 3255/final-project-vxie0119/data/PlayList.csv')
+```
+
+```{python}
+# Summarize missing data for InjuryRecord.csv
+injury_missing_summary = injury.isnull().sum()
+injury_missing_summary = injury_missing_summary[injury_missing_summary > 0].rename('InjuryRecord')
+
+# Summarize missing data for PlayList.csv
+playlist_missing_summary = plays.isnull().sum()
+playlist_missing_summary = playlist_missing_summary[playlist_missing_summary > 0].rename('PlayList')
+
+# Calculate the ratio of missing data to total entries for each dataset
+missing_data_ratio_injury = (injury_missing_summary.sum() / len(injury)) * 100
+missing_data_ratio_playlist = (playlist_missing_summary.sum() / len(plays)) * 100
+
+# Create a DataFrame from the missing data summaries
+missing_data_summary = pd.DataFrame({
+    'InjuryRecord.csv': injury_missing_summary,
+    'PlayList.csv': playlist_missing_summary
+})
+
+# Fill NaN values with zero and convert all numeric counts to integers
+missing_data_summary = missing_data_summary.fillna(0).astype(int)
+
+# Convert all numeric counts to integers (ensures whole numbers)
+missing_data_summary = missing_data_summary.astype(int)
+
+# Add the ratio of missing data as a new row
+missing_data_summary.loc['Missing Data Ratio (%)'] = [f"{missing_data_ratio_injury:.2f}%", f"{missing_data_ratio_playlist:.2f}%"]
+
+# Transpose the DataFrame for better readability
+missing_data_summary = missing_data_summary.T
+
+# Rename index to indicate it's the file name and adjust column names if needed
+missing_data_summary.index.name = 'File Name'
+
+# Display the DataFrame neatly
+print(missing_data_summary)
+```
+
+- Data is not too dirty.
+- `PlayKey` can be filled in by adding "-1" to the end.
+- Remaining missing values are harder to fill in without using external resources (such as NGS)
+- For this research, there is not much data cleaning to do.
+
+## Frequency by Position Group
+
+```{python}
+# Fill missing 'PlayKey' values with 'GameID' concatenated with '-1'
+injury['PlayKey'] = injury.apply(
+    lambda row: f"{row['GameID']}-1" if pd.isnull(row['PlayKey']) else row['PlayKey'],
+    axis=1
+)
+
+# Merge injury_record and playlist on PlayerKey
+merged_data = pd.merge(injury, plays, on='PlayKey', how='inner')
+
+# Group by 'RosterPosition' and 'BodyPart' and count the occurrences
+injury_by_position = merged_data.groupby(['RosterPosition', 'BodyPart']).size().reset_index(name='Frequency')
+
+# Create a pivot table with 'RosterPosition' as index, 'BodyPart' as columns, and 'Frequency' as values
+pivot_table = injury_by_position.pivot_table(index='RosterPosition', columns='BodyPart', values='Frequency', fill_value=0)
+
+# Convert frequencies to integers
+pivot_table = pivot_table.astype(int)
+
+# Plot a heatmap to visualize the frequency of each type of injury by each position group
+plt.figure(figsize=(10, 5))
+sns.heatmap(pivot_table, annot=True, cmap="viridis")
+plt.title('Frequency of Each Type of Injury by Position Group')
+plt.xlabel('Body Part')
+plt.ylabel('Roster Position')
+plt.show()
+```
+
+## Field Types
+
+```{python}
+# Given the code snippets provided by the user, we will combine both plots into a single figure with subplots.
+
+# First, let's recreate the datasets based on the previous analysis steps.
+# NOTE: For the purposes of this demonstration, we will assume 'new_injury' and 'new_plays' are the injury_data and playlist_data respectively.
+
+injury_counts = injury['Surface'].value_counts()
+injury_percentages = (injury_counts / injury_counts.sum() * 100).round(2)
+
+# Calculate the predominant surface for each game in the playlist data
+predominant_surface_per_game = plays.groupby('GameID')['FieldType'].agg(pd.Series.mode).to_frame()
+surface_type_counts = predominant_surface_per_game['FieldType'].apply(lambda x: x[0] if isinstance(x, list) else x).value_counts()
+surface_type_percentages = (surface_type_counts / surface_type_counts.sum() * 100).round(2)
+
+# Set up a figure with two subplots
+fig, axs = plt.subplots(1, 2, figsize=(12, 6))  # Increased figure size for clarity
+
+# Plot for injuries by surface type
+axs[0].bar(injury_counts.index, injury_counts, color='skyblue')
+axs[0].set_title('Number of Injuries by Surface Type')
+axs[0].set_xlabel('Surface Type')
+axs[0].set_ylabel('Number of Injuries')
+axs[0].grid(axis='y', linestyle='--', alpha=0.7)
+
+# Annotate percentages above the bars for the first plot
+for i, v in enumerate(injury_counts):
+    axs[0].text(i, v + 1, f'{injury_percentages.iloc[i]}%', ha='center', va='bottom')
+
+# Plot for number of games played on each surface type
+axs[1].bar(surface_type_counts.index, surface_type_counts, color=['green', 'blue'])
+axs[1].set_title('Number of Games Predominantly Played on Each Surface Type')
+axs[1].set_xlabel('Surface Type')
+axs[1].set_ylabel('Number of Games')
+axs[1].grid(axis='y', linestyle='--', alpha=0.7)
+
+# Annotate percentages above the bars for the second plot
+for i, v in enumerate(surface_type_counts):
+    axs[1].text(i, v + 20, f'{surface_type_percentages.iloc[i]}%', ha='center', va='bottom')
+
+# Set tight layout to prevent overlap
+plt.tight_layout()
+
+# Show the combined plot
+plt.show()
+```
+
+## Injury by Duration
+
+```{python}
+# To reflect the correct recovery time, we need to adjust the data.
+# If there's a '1' in every 'DM' column for a record, the recovery is 42 days.
+# If there are '1's in the first three 'DM' columns, recovery is 28 days, and so on.
+
+# Create a new column that determines the maximum recovery time based on the 'DM' columns
+def determine_recovery(row):
+    if row['DM_M42'] == 1:
+        return '42 Days'
+    if row['DM_M28'] == 1:
+        return '28 Days'
+    if row['DM_M7'] == 1:
+        return '7 Days'
+    if row['DM_M1'] == 1:
+        return '1 Day'
+    return 'Unknown'
+
+injury['RecoveryTime'] = injury.apply(determine_recovery, axis=1)
+
+# Group by BodyPart and RecoveryTime to count the number of injuries
+recovery_counts = injury.groupby(['BodyPart', 'RecoveryTime']).size().unstack(fill_value=0)
+
+# Reorder the columns to match the desired recovery time order
+recovery_counts = recovery_counts[[
+    '1 Day', '7 Days', '28 Days', '42 Days']]
+
+# Calculate the percentage of recovery counts for each body part
+recovery_percent = recovery_counts.div(recovery_counts.sum(axis=1), axis=0)
+
+# Create the stacked bar chart with pastel colors
+pastel_colors = ['#77dd77', '#fdfd96', '#84b6f4', '#ffbdbd']  # Pastel colors for green, yellow, blue, and pink respectively
+
+# Plot the stacked bar chart with ordered recovery times
+ax = recovery_percent.plot(kind='bar', stacked=True, figsize=(10, 6), color=pastel_colors)
+
+# Annotate the counts on the bars with contrast adjustment for readability
+for n, x in enumerate([*recovery_counts.index.values]):
+    for (proportion, count, y_loc) in zip(recovery_percent.loc[x],
+                                          recovery_counts.loc[x],
+                                          recovery_percent.loc[x].cumsum()):
+        # To ensure the text is readable, choose a text color with good contrast
+        text_color = 'black'  # Black for contrast on pastel colors
+        if count > 0:  # Only annotate non-zero counts
+            ax.text(x=n, y=y_loc - proportion/2, s=int(count), ha='center', va='center', color=text_color)
+
+ax.figure.gca().yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{int(x*100)}%'))
+
+plt.title('Proportion of Injury Types by Recovery Time')
+plt.xlabel('Body Part Injured')
+plt.ylabel('Proportion of Total Injuries')
+plt.legend(title='Recovery Time', bbox_to_anchor=(1.04,1), loc="upper left")
+plt.tight_layout()
+plt.show()
+```
+
+## Injuries by Surface
+
+```{python}
+# Prepare the data by creating a crosstab
+contingency_table = pd.crosstab(injury['BodyPart'], injury['Surface'])
+
+# Plot the data as a stacked bar chart
+ax = contingency_table.plot(kind='bar', stacked=True, figsize=(10, 6))
+plt.title('Injury Body Part by Surface Type')
+plt.xlabel('Body Part')
+plt.ylabel('Number of Injuries')
+plt.legend(title='Surface Type')
+
+# Annotate counts on the bars
+for n, rect in enumerate(ax.patches):  # iterate over each bar
+    # The height of the bar is the data value and can be used as the label
+    height = rect.get_height()
+    # Find the position to place the count text
+    x = rect.get_x() + rect.get_width() / 2.0
+    y = rect.get_y() + height / 2.0
+    # Only add the annotation if the height is non-zero
+    if height > 0:
+        ax.text(x, y, int(height), ha='center', va='center')
+
+plt.show()
+```
 
 ## Analysis 
 
+```{python}
+# Fill missing 'PlayKey' values with 'GameID' concatenated with '-1'
+injury['PlayKey'] = injury.apply(
+    lambda row: f"{row['GameID']}-1" if pd.isnull(row['PlayKey']) else row['PlayKey'],
+    axis=1
+)
+
+# Create a set of unique keys from InjuryRecord which indicates injuries
+injury_keys = set(injury['PlayKey'])
+
+# Create a binary variable in PlayList that indicates whether an injury occurred
+plays['InjuryOccurred'] = plays['PlayKey'].isin(injury_keys).astype(int)
+
+# Ensure 'Surface' column is in the PlayList dataset and check data
+if 'FieldType' not in plays.columns:
+    print("Error: 'FieldType' column is missing from PlayList dataset.")
+else:
+    # Create a contingency table of injuries by surface type
+    contingency_table = pd.crosstab(plays['InjuryOccurred'], plays['FieldType'])
+
+    # Perform the Chi-Square test
+    chi2, p, dof, expected = chi2_contingency(contingency_table)
+
+    print(f"Chi-Square Statistic: {chi2:.3f}, p-value: {p:.3f}")
+```
+
+- Is there an association between injury occurrence and the different surface types?
+- p-value = 0.012
+    + We can reject the null hypothesis and say that there is an association between surface types and injury occurrence.
+
 ## Conclusions
+
+- There is a significant association between surface type and injury occurrence.
+- Supports previous studies that synthetic fields result in a higher chance of lower body extremity injuries.
+- Future considerations:
+    + Weather impact on synthetic fields.
+    + Potential resolves to reduce injuries.
+
+## References
+
+[1] Loughran, Galvin J et al. “Incidence of Knee Injuries on Artificial Turf Versus Natural Grass in National Collegiate Athletic Association American Football: 2004-2005 Through 2013-2014 Seasons.” The American journal of sports medicine vol. 47,6 (2019): 1294-1301. doi:10.1177/0363546519833925
+
+[2] Mack, Christina D et al. “Higher Rates of Lower Extremity Injury on Synthetic Turf Compared With Natural Turf Among National Football League Athletes: Epidemiologic Confirmation of a Biomechanical Hypothesis.” The American journal of sports medicine vol. 47,1 (2019): 189-196. doi:10.1177/0363546518808499
