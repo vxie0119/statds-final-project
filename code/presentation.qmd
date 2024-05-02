@@ -30,10 +30,13 @@ warnings.filterwarnings('ignore', category=FutureWarning)
 
 - Data was sourced from [Kaggle](https://www.kaggle.com/competitions/nfl-playing-surface-analytics/data).
 - Recorded from two consecutive NFL Seasons (presumably 2018-2019)
-- Primarily using **InjuryRecord.feather** and **PlayList.feather**
-- `InjuryRecord.feather`
+- Primarily using **InjuryRecord.csv** and **PlayList.csv**
+
+## Data Files
+
+- `InjuryRecord.csv`
     + *PlayerKey*, *GameID*, *PlayKey*, *BodyPart*, *Surface*, *Days injured from 1 day to 42 days*
-- `PlayList.feather`
+- `PlayList.csv`
     + *PlayerKey*, *GameID*, *PlayKey*, *RosterPosition*, *PlayerDay*, *PlayerGame*, *StadiumType*, *FieldType*, *Temperature*, *Weather*, *PlayType*, *PlayerGamePlay*, *Position*, *PositionGroup*
 
 ## Existing Works
@@ -95,7 +98,7 @@ print(missing_data_summary)
 
 - Data is not too dirty.
 - `PlayKey` can be filled in by adding "-1" to the end.
-- Remaining missing values are harder to fill in without using external resources (such as NGS)
+- Remaining missing values are harder to fill in without using external resources (such as NGS).
 - For this research, there is not much data cleaning to do.
 
 ## Frequency by Position Group
@@ -295,7 +298,7 @@ else:
 ## Conclusions
 
 - There is a significant association between surface type and injury occurrence.
-- Supports previous studies that synthetic fields result in a higher chance of lower body extremity injuries.
+- Supports previous studies that synthetic fields result in a higher chance of lower extremity injuries.
 - Future considerations:
     + Weather impact on synthetic fields.
     + Potential resolves to reduce injuries.
